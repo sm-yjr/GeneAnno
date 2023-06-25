@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 Entrez.email = '123456789@qq.com'  # 你的邮箱
 translator = Translator()
 
-input_folder = '/Users/yangjiarui/Downloads/cellranger/outdir/GeneAnno/Feb/'  # 输入文件夹
+input_folder = '/Users/yangjiarui/Downloads/GeneAnnotation/zy_26c/'  # 输入文件夹
 output_folder = os.path.join(input_folder, 'annotated')  # 输出文件夹
 
 # 创建输出文件夹
@@ -60,10 +60,12 @@ for filename in os.listdir(input_folder):
     if filename.endswith('.csv'):
         # 读取CSV文件
         df = pd.read_csv(os.path.join(input_folder, filename))
+        first_column_name = df.columns[0]
+        df = df.rename(columns={first_column_name: 'Gene'})  # 如果第一列没有名称，则添加一个列名
         genes = df['Gene'].values  # 获取基因名称
 
         # 创建线程池
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=5) as executor:
             futures = {executor.submit(process_gene, gene): gene for gene in genes}
 
             for future in as_completed(futures):
