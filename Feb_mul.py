@@ -1,14 +1,18 @@
 from Bio import Entrez
+Entrez.api_key = "d8aca9a4d349dbfe4e35c3dda14623ebed09"
 import pandas as pd
 import os
 import time
 from googletrans import Translator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-Entrez.email = '123456789@qq.com'  # 你的邮箱
+Entrez.max_tries = 30
+Entrez.sleep_between_tries = 5
+
+Entrez.email = 'abc@gmail.com'  # 你的邮箱
 translator = Translator()
 
-input_folder = '/Users/yangjiarui/Downloads/GeneAnnotation/zy_26c/'  # 输入文件夹
+input_folder = '/Users/yangjiarui/Downloads/GeneAnnotation/wy/'  # 输入文件夹
 output_folder = os.path.join(input_folder, 'annotated')  # 输出文件夹
 
 # 创建输出文件夹
@@ -17,6 +21,8 @@ if not os.path.exists(output_folder):
 
 def process_gene(gene_name):
     print(f"Processing {gene_name}")
+    count = 0 # 错误计数
+    time.sleep(0.1) # 避免超限
     while True:  # 无限循环，直到查询成功
         try:
             handle = Entrez.esearch(db="gene", term=f"{gene_name}[Gene] AND Mus musculus[Orgn]")
@@ -38,10 +44,14 @@ def process_gene(gene_name):
                 full_name = gene_ref.get('Gene-ref_desc', 'No name found')
 
                 # 翻译成中文
-                full_name_cn = translator.translate(full_name, dest='zh-CN').text
-                summary_cn = translator.translate(summary, dest='zh-CN').text
+                full_name_cn = full_name
+                summary_cn = summary
+                # full_name_cn = translator.translate(full_name, dest='zh-CN').text
+                # summary_cn = translator.translate(summary, dest='zh-CN').text
             else:
                 # 如果没有找到基因信息，添加一个占位符
+                # summary = 'Summary not found'
+                # full_name = "Full name not found"
                 summary_cn = '没有找到摘要'
                 full_name_cn = '没有找到全名'
 
@@ -51,6 +61,8 @@ def process_gene(gene_name):
             print(f"Error occurred: {e}")
             print(f"Waiting for a while before retrying...")
             time.sleep(1)
+            count = count + 1
+            print(f"Retrying {gene_name} for {count} times")
             continue
 
     return gene_name, full_name_cn, summary_cn
@@ -66,7 +78,7 @@ for filename in os.listdir(input_folder):
         genes = df['Gene'].values  # 获取基因名称
 
         # 创建线程池
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=20) as executor:
             futures = {executor.submit(process_gene, gene): gene for gene in genes}
 
             for future in as_completed(futures):
