@@ -24,7 +24,7 @@ for gene_name in genes:
         # 使用基因ID获取基因的具体信息
         handle = Entrez.efetch(db="gene", id=gene_id, rettype="gb", retmode="xml")
         gene_record = Entrez.read(handle)
-
+        handle.close()
         # 获取摘要
         summary = gene_record[0].get('Entrezgene_summary', 'No summary found')
         summaries.append(summary)

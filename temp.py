@@ -16,6 +16,7 @@ if record["Count"] != "0":
     # 使用基因ID获取基因的具体信息
     handle = Entrez.efetch(db="gene", id=gene_id, rettype="gb", retmode="xml")
     gene_record = Entrez.read(handle)
+    handle.close()
     summary = gene_record[0].get('Entrezgene_summary', 'No summary found')
 
     entrezgene_gene = gene_record[0].get('Entrezgene_gene', {})

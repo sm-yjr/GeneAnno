@@ -29,6 +29,7 @@ def process_gene(gene_name):
                 # 使用基因ID获取基因的具体信息
                 handle = Entrez.efetch(db="gene", id=gene_id, rettype="gb", retmode="xml")
                 gene_record = Entrez.read(handle)
+                handle.close()
 
                 # 获取摘要和全名
                 summary = gene_record[0].get('Entrezgene_summary', 'No summary found')
@@ -65,7 +66,7 @@ for filename in os.listdir(input_folder):
         genes = df['Gene'].values  # 获取基因名称
 
         # 创建线程池
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(process_gene, gene): gene for gene in genes}
 
             for future in as_completed(futures):
